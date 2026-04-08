@@ -17,6 +17,11 @@ body {
     display: none;
 }
 
+#nav {
+    text-align: center;
+    margin: 10px;
+}
+
 button {
     margin: 5px;
     padding: 8px;
@@ -50,13 +55,18 @@ img {
     <button onclick="changeSize(3)">A-</button>
 
     <button onclick="addImage()">Imagen</button>
+    <button onclick="addPage()">➕ Añadir página</button>
 
-    <button onclick="newPage()">➕ Añadir página</button>
+    <button onclick="saveBook()">💾 Guardar para todos</button>
+</div>
+
+<div id="nav">
     <button onclick="prevPage()">⬅️</button>
+    <span id="pageNum"></span>
     <button onclick="nextPage()">➡️</button>
 </div>
 
-<div id="page" contenteditable="false"></div>
+<div id="page"></div>
 
 <input type="file" id="imgInput" accept="image/*" style="display:none">
 
@@ -67,13 +77,13 @@ const isEdit = params.get("edit") === "1";
 const pageDiv = document.getElementById("page");
 const toolbar = document.getElementById("toolbar");
 
-let pages = JSON.parse(localStorage.getItem("bookPages")) || [
-    "<h1>Mi libro</h1><p>Empieza a escribir...</p>"
+let pages = [
+`<h1>Mi libro</h1><p>Empieza a escribir...</p>`
 ];
 
 let currentPage = 0;
 
-// Activar modo edición
+// Activar edición
 if (isEdit) {
     toolbar.style.display = "block";
     pageDiv.contentEditable = true;
@@ -82,29 +92,10 @@ if (isEdit) {
 // Mostrar página
 function showPage() {
     pageDiv.innerHTML = pages[currentPage];
+    document.getElementById("pageNum").innerText =
+        "Página " + (currentPage + 1) + " / " + pages.length;
 }
 showPage();
-
-// Guardar cambios
-pageDiv.addEventListener("input", () => {
-    if (isEdit) {
-        pages[currentPage] = pageDiv.innerHTML;
-        save();
-    }
-});
-
-// Guardar
-function save() {
-    localStorage.setItem("bookPages", JSON.stringify(pages));
-}
-
-// Nueva página
-function newPage() {
-    pages.push("<h2>Nueva página</h2>");
-    currentPage = pages.length - 1;
-    save();
-    showPage();
-}
 
 // Navegación
 function nextPage() {
@@ -121,12 +112,33 @@ function prevPage() {
     }
 }
 
+// Editar contenido
+pageDiv.addEventListener("input", () => {
+    if (isEdit) {
+        pages[currentPage] = pageDiv.innerHTML;
+    }
+});
+
+// Nueva página
+function addPage() {
+    pages.push("<h2>Nueva página</h2>");
+    currentPage = pages.length - 1;
+    showPage();
+}
+
+// Guardar para todos (IMPORTANTE)
+function saveBook() {
+    const contenido = JSON.stringify(pages, null, 2);
+
+    alert("Copia esto y pégalo en tu código en GitHub:\n\n" + contenido);
+}
+
 // Formato
 function format(cmd) {
     document.execCommand(cmd);
 }
 
-// Tamaño de texto
+// Tamaño
 function changeSize(size) {
     document.execCommand("fontSize", false, size);
 }
