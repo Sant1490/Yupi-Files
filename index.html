@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Mi Libro</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial;
+    background: #eaeaea;
+}
+
+#toolbar {
+    background: #222;
+    padding: 10px;
+    position: sticky;
+    top: 0;
+    display: none;
+}
+
+button {
+    margin: 5px;
+    padding: 8px;
+    border: none;
+    cursor: pointer;
+}
+
+#editor {
+    background: white;
+    width: 80%;
+    margin: 20px auto;
+    padding: 30px;
+    min-height: 500px;
+    border-radius: 10px;
+    transform-origin: top center;
+}
+
+img {
+    max-width: 100%;
+    border-radius: 8px;
+}
+</style>
+</head>
+
+<body>
+
+<div id="toolbar">
+    <button onclick="format('bold')">Negrita</button>
+    <button onclick="format('italic')">Cursiva</button>
+    <button onclick="addImage()">Imagen</button>
+    <button onclick="zoomIn()">Zoom +</button>
+    <button onclick="zoomOut()">Zoom -</button>
+    <button onclick="fullscreen()">Pantalla Completa</button>
+</div>
+
+<div id="editor"></div>
+
+<input type="file" id="imgInput" accept="image/*" style="display:none">
+
+<script>
+const params = new URLSearchParams(window.location.search);
+const isEdit = params.get("edit") === "1";
+
+const editor = document.getElementById("editor");
+const toolbar = document.getElementById("toolbar");
+
+let zoom = 1;
+
+// Activar modo edición
+if (isEdit) {
+    editor.contentEditable = true;
+    toolbar.style.display = "block";
+}
+
+// Cargar contenido guardado
+editor.innerHTML = localStorage.getItem("libro") || "<h1>Mi libro</h1><p>Empieza a escribir...</p>";
+
+// Guardar automáticamente
+editor.addEventListener("input", () => {
+    if (isEdit) {
+        localStorage.setItem("libro", editor.innerHTML);
+    }
+});
+
+// Formato
+function format(cmd) {
+    document.execCommand(cmd);
+}
+
+// Imagen
+function addImage() {
+    document.getElementById("imgInput").click();
+}
+
+document.getElementById("imgInput").addEventListener("change", function() {
+    const file = this.files[0];
+    const reader = new FileReader();
+
+    reader.onload = function(e) {
+        document.execCommand("insertImage", false, e.target.result);
+    };
+
+    reader.readAsDataURL(file);
+});
+
+// Zoom
+function zoomIn() {
+    zoom += 0.1;
+    editor.style.transform = "scale(" + zoom + ")";
+}
+
+function zoomOut() {
+    zoom -= 0.1;
+    editor.style.transform = "scale(" + zoom + ")";
+}
+
+// Pantalla completa
+function fullscreen() {
+    document.documentElement.requestFullscreen();
+}
+</script>
+
+</body>
+</html>
