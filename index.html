@@ -8,14 +8,12 @@
 body {
     margin: 0;
     font-family: Arial;
-    background: #eaeaea;
+    background: #ddd;
 }
 
 #toolbar {
     background: #222;
     padding: 10px;
-    position: sticky;
-    top: 0;
     display: none;
 }
 
@@ -26,14 +24,13 @@ button {
     cursor: pointer;
 }
 
-#editor {
+#page {
     background: white;
     width: 80%;
     margin: 20px auto;
     padding: 30px;
     min-height: 500px;
     border-radius: 10px;
-    transform-origin: top center;
 }
 
 img {
@@ -48,13 +45,18 @@ img {
 <div id="toolbar">
     <button onclick="format('bold')">Negrita</button>
     <button onclick="format('italic')">Cursiva</button>
+
+    <button onclick="changeSize(5)">A+</button>
+    <button onclick="changeSize(3)">A-</button>
+
     <button onclick="addImage()">Imagen</button>
-    <button onclick="zoomIn()">Zoom +</button>
-    <button onclick="zoomOut()">Zoom -</button>
-    <button onclick="fullscreen()">Pantalla Completa</button>
+
+    <button onclick="newPage()">➕ Añadir página</button>
+    <button onclick="prevPage()">⬅️</button>
+    <button onclick="nextPage()">➡️</button>
 </div>
 
-<div id="editor"></div>
+<div id="page" contenteditable="false"></div>
 
 <input type="file" id="imgInput" accept="image/*" style="display:none">
 
@@ -62,30 +64,71 @@ img {
 const params = new URLSearchParams(window.location.search);
 const isEdit = params.get("edit") === "1";
 
-const editor = document.getElementById("editor");
+const pageDiv = document.getElementById("page");
 const toolbar = document.getElementById("toolbar");
 
-let zoom = 1;
+let pages = JSON.parse(localStorage.getItem("bookPages")) || [
+    "<h1>Mi libro</h1><p>Empieza a escribir...</p>"
+];
+
+let currentPage = 0;
 
 // Activar modo edición
 if (isEdit) {
-    editor.contentEditable = true;
     toolbar.style.display = "block";
+    pageDiv.contentEditable = true;
 }
 
-// Cargar contenido guardado
-editor.innerHTML = localStorage.getItem("libro") || "<h1>Mi libro</h1><p>Empieza a escribir...</p>";
+// Mostrar página
+function showPage() {
+    pageDiv.innerHTML = pages[currentPage];
+}
+showPage();
 
-// Guardar automáticamente
-editor.addEventListener("input", () => {
+// Guardar cambios
+pageDiv.addEventListener("input", () => {
     if (isEdit) {
-        localStorage.setItem("libro", editor.innerHTML);
+        pages[currentPage] = pageDiv.innerHTML;
+        save();
     }
 });
+
+// Guardar
+function save() {
+    localStorage.setItem("bookPages", JSON.stringify(pages));
+}
+
+// Nueva página
+function newPage() {
+    pages.push("<h2>Nueva página</h2>");
+    currentPage = pages.length - 1;
+    save();
+    showPage();
+}
+
+// Navegación
+function nextPage() {
+    if (currentPage < pages.length - 1) {
+        currentPage++;
+        showPage();
+    }
+}
+
+function prevPage() {
+    if (currentPage > 0) {
+        currentPage--;
+        showPage();
+    }
+}
 
 // Formato
 function format(cmd) {
     document.execCommand(cmd);
+}
+
+// Tamaño de texto
+function changeSize(size) {
+    document.execCommand("fontSize", false, size);
 }
 
 // Imagen
@@ -103,22 +146,6 @@ document.getElementById("imgInput").addEventListener("change", function() {
 
     reader.readAsDataURL(file);
 });
-
-// Zoom
-function zoomIn() {
-    zoom += 0.1;
-    editor.style.transform = "scale(" + zoom + ")";
-}
-
-function zoomOut() {
-    zoom -= 0.1;
-    editor.style.transform = "scale(" + zoom + ")";
-}
-
-// Pantalla completa
-function fullscreen() {
-    document.documentElement.requestFullscreen();
-}
 </script>
 
 </body>
